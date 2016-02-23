@@ -56,21 +56,25 @@ class tcpclient(object):
     def putData(self, data):
         if (data.startswith('*')):
             parts = data.split(' ')
-            if (len(parts) != 5):
+            if (len(parts) != 6):
                 print(data + " ==> BAD FORMAT")
             else:
                 self.sequence = self.sequence + 1
                 print("[RCV] " + data);
-                for p in parts[2:]:
+#                 for p in parts[2:]:
 #                     result = p.split(':')
 #                     anchorid = result[0]
 #                     tagid = parts[1]
 #                     dist = result[1]
 #                     msg = str(self.sequence) + "," + result[0] + "," + parts[1] + "," + result[1] + "*"
 #                     print("   " + msg)
-                    try:
+#                     try:
 #                         self.sock.send(msg + "\r\n");
-                        self.sock.send(data + "\r\n");
-                    except:
-                        print("Could not send msg!")
+#                         self.sock.send(data + "\r\n");
+#                     except:
+#                         print("Could not send msg!")
+                try:
+                    self.sock.send(data + "\r\n");
+                except:
+                    print("Could not send msg!")
             
