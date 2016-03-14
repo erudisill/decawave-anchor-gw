@@ -16,7 +16,7 @@
         "rtscts": 0, 
         "timeout": 0, 
         "stopbits": 1, 
-        "port": "/dev/cu.usbserial-AL00XWRC"
+        "port": "/dev/cu.usbserial-AL00XWR8"
     }, 
     "filename": ""
 }

@@ -58,7 +58,8 @@ def main(argv):
 
     print "Starting serial service."
     serial = CpSerialService(settings.cpSerial)
-    serial.connectData(client.putData);
+    serial.connectData(client.putData)
+    client.connectData(serial.writeData)
     serial.start()
     
     print "Use Control-C to exit."

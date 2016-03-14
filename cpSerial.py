@@ -98,17 +98,16 @@ class CpSerialService(threading.Thread):
             else:
                 while self.ser.inWaiting() > 0:
                     c = self.ser.read(1)
-                    #data.append(c)
                     self.received_bytes = self.received_bytes + 1
                     if c == '\r':
                         self.records = self.records + 1
                         if self._putData:
+                            print(data.decode("utf-8"))
                             self._putData(bytearray(data))
                             del data[:]
                     else:
                         if c != '\n':
                             data.append(c)
-            
             #time.sleep(0.005)
                     
         # shutdown the serial port
@@ -123,3 +122,7 @@ class CpSerialService(threading.Thread):
             
     def connectData(self, q):
         self._putData = q
+        
+    def writeData(self, data):
+        print("[TCP] " + data)
+        self.ser.write(data)
