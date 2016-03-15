@@ -102,7 +102,7 @@ class CpSerialService(threading.Thread):
                     if c == '\r':
                         self.records = self.records + 1
                         if self._putData:
-                            print(data.decode("utf-8"))
+#                             print(data.decode("utf-8"))
                             self._putData(bytearray(data))
                             del data[:]
                     else:
