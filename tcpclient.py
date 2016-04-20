@@ -56,6 +56,8 @@ class tcpclient(object):
                 time.sleep(2)
         
     def putData(self, data):
+        if (data.startswith('* A')):
+            return
         if (data.startswith('*')):
 #             parts = data.split(' ')
 #             if (len(parts) != 6):

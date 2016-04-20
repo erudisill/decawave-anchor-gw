@@ -2,8 +2,8 @@
     "py/object": "settings.Settings", 
     "tcpclient": {
         "py/object": "tcpclient.tcpclientsettings", 
-    	"ip": "192.168.99.100",
-    	"port": 1337,
+    	"ip": "127.0.0.1",
+    	"port": 9900,
     	"anchor_id": 1
     }, 
     "cpSerial": {
