@@ -1,6 +1,7 @@
 import logging
 import serial
 import threading
+import time
 from binascii import hexlify
 
 class CpSerialBytes(bytearray):
@@ -81,33 +82,33 @@ class CpSerialService(threading.Thread):
         
         while self.stop_event.is_set() == False:
             
-            # non-cobs data just gets passed through as it comes in
-            if self.ser.readline == 0:
-                del data[:]
-                if (self.ser.inWaiting() > 0):
-                    data.extend(self.ser.read(self.ser.inWaiting()))
-        
-                if len(data) > 0:
-                    # log and signal data received
-                    self.received_bytes = self.received_bytes + len(data)
-                    if self._putData:
-                        # send new copy of data
-                        self._putData(bytearray(data))
-                        
-            # cobs-encoded gets buffered up per 0 record delimeter
-            else:
-                while self.ser.inWaiting() > 0:
-                    c = self.ser.read(1)
-                    self.received_bytes = self.received_bytes + 1
-                    if c == '\r':
-                        self.records = self.records + 1
-                        if self._putData:
-                            print(data.decode("utf-8"))
-                            self._putData(bytearray(data))
-                            del data[:]
-                    else:
-                        if c != '\n':
-                            data.append(c)
+             # non-cobs data just gets passed through as it comes in
+             if self.ser.readline == 0:
+                 del data[:]
+                 if (self.ser.inWaiting() > 0):
+                     data.extend(self.ser.read(self.ser.inWaiting()))
+         
+                 if len(data) > 0:
+                     # log and signal data received
+                     self.received_bytes = self.received_bytes + len(data)
+                     if self._putData:
+                         # send new copy of data
+                         self._putData(bytearray(data))
+                         
+             # cobs-encoded gets buffered up per 0 record delimeter
+             else:
+                 while self.ser.inWaiting() > 0:
+                     c = self.ser.read(1)
+                     self.received_bytes = self.received_bytes + 1
+                     if c == '\r':
+                         self.records = self.records + 1
+                         if self._putData:
+                             print(data.decode("utf-8"))
+                             self._putData(bytearray(data))
+                             del data[:]
+                     else:
+                         if c != '\n':
+                             data.append(c)
             #time.sleep(0.005)
                     
         # shutdown the serial port
