@@ -10,13 +10,13 @@
         "py/object": "cpSerial.CpSerialSettings", 
         "parity": "N", 
         "baudrate": 115200, 
-        "readline": 1, 
+        "linemode": 1, 
         "bytesize": 8, 
         "xonxoff": 0, 
         "rtscts": 0, 
         "timeout": 0, 
         "stopbits": 1, 
-        "port": "/dev/cu.usbmodem60111"
+        "port": "*"
     }, 
     "filename": ""
 }

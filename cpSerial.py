@@ -3,6 +3,7 @@ import serial
 import threading
 import time
 from binascii import hexlify
+from serial.tools import list_ports
 
 class CpSerialBytes(bytearray):
     def __str__(self, *args, **kwargs):
@@ -22,7 +23,8 @@ class CpSerialSettings():
         self.bytesize = 8
         self.xonxoff = 0
         self.rtscts = 0
-        self.readline = 0
+        self.linemode = 0
+        self.token = "CDC"
     
     def __str__(self):
         s =  self.port + " " + str(self.baudrate) + " " + str(self.bytesize) + \
@@ -37,6 +39,7 @@ class CpSerialService(threading.Thread):
     
     def __init__(self, settings=None, loggerName='CpSerialService'):
         threading.Thread.__init__(self)
+        self.settings = settings
         self._putData = None
         self.stop_event = threading.Event()
         self.received_bytes = 0
@@ -52,7 +55,7 @@ class CpSerialService(threading.Thread):
             self.ser.bytesize = 8
             self.ser.xonxoff = 0
             self.ser.rtscts = 0
-            self.ser.readline = 0
+            self.ser.linemode = 0
         else:
             self.ser.port = settings.port
             self.ser.baudrate = settings.baudrate
@@ -61,14 +64,49 @@ class CpSerialService(threading.Thread):
             self.ser.bytesize = settings.bytesize
             self.ser.xonxoff = settings.xonxoff
             self.ser.rtscts = settings.rtscts
-            self.ser.readline = settings.readline
+            self.ser.linemode = settings.linemode
             
         self.records = -1
             
+    def discover_port(self):
+        if self.settings.port != "*":
+            self.ser.open()
+        else:
+            while self.stop_event.is_set() == False:
+                p = list(list_ports.comports())
+                if len(p) > 0:
+                    cdc = [c for c in p if self.settings.token in c[1]]
+                    for port in cdc:
+                            self.ser.port = port[0]
+                            for x in range(0,4):
+                                print "Trying " + str(x+1) + ": " + port[0]
+                                try:
+                                    self.ser.open()
+                                    self.ser.read(self.ser.inWaiting())
+                                    self.ser.write("v\r")
+                                    time.sleep(0.25)
+                                    line = self.ser.readline()
+                                    print(line)
+                                    if "COORDINATOR" in line:
+                                        return
+                                    self.ser.close()
+                                    time.sleep(0.25)
+                                except Exception as ex:
+                                    print ex
+                print "Could not connect to a coordinator on a serial port.  Trying again in a sec."
+                time.sleep(1)
+                
+            if self.stop_event.is_set() == True:
+                try:
+                    self.ser.close()
+                except:
+                    pass
+
+        
     def run(self):
         
         self.logger.info('starting CpSerialService...')
-        if self.ser.readline == 1:
+        if self.ser.linemode == 1:
             print('CpSerialSerivce using COBS')
             self.records = 0
         else:
@@ -77,26 +115,13 @@ class CpSerialService(threading.Thread):
         
         data = bytearray()
         
-        self.ser.open()
+        #self.ser.open()
+        self.discover_port()
         self.logger.info('opened port ' + self.ser.port)
         
         while self.stop_event.is_set() == False:
             
-             # non-cobs data just gets passed through as it comes in
-             if self.ser.readline == 0:
-                 del data[:]
-                 if (self.ser.inWaiting() > 0):
-                     data.extend(self.ser.read(self.ser.inWaiting()))
-         
-                 if len(data) > 0:
-                     # log and signal data received
-                     self.received_bytes = self.received_bytes + len(data)
-                     if self._putData:
-                         # send new copy of data
-                         self._putData(bytearray(data))
-                         
-             # cobs-encoded gets buffered up per 0 record delimeter
-             else:
+             if self.ser.linemode == 1:
                  while self.ser.inWaiting() > 0:
                      c = self.ser.read(1)
                      self.received_bytes = self.received_bytes + 1
@@ -109,6 +134,17 @@ class CpSerialService(threading.Thread):
                      else:
                          if c != '\n':
                              data.append(c)
+             else:
+                 del data[:]
+                 if (self.ser.inWaiting() > 0):
+                     data.extend(self.ser.read(self.ser.inWaiting()))
+         
+                 if len(data) > 0:
+                     # log and signal data received
+                     self.received_bytes = self.received_bytes + len(data)
+                     if self._putData:
+                         # send new copy of data
+                         self._putData(bytearray(data))
             #time.sleep(0.005)
                     
         # shutdown the serial port
